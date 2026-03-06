@@ -136,6 +136,23 @@ if submitted or url_source:
         "(same as training winsorization)."
     )
 
+# ---- Average predicted G3 over time ----
+st.subheader("Average predicted G3 over time")
+con = sqlite3.connect(DB_PATH)
+df_chart = pd.read_sql_query(
+    "SELECT timestamp, predicted_g3 FROM predictions ORDER BY id ASC",
+    con,
+)
+con.close()
+if df_chart.empty:
+    st.info("No predictions yet — make a prediction to see the chart.")
+else:
+    df_chart["date"] = pd.to_datetime(df_chart["timestamp"]).dt.date
+    df_avg = df_chart.groupby("date")["predicted_g3"].mean().reset_index()
+    df_avg.columns = ["Date", "Average predicted G3"]
+    df_avg = df_avg.set_index("Date")
+    st.line_chart(df_avg)
+
 # ---- Prediction history ----
 with st.expander("Prediction history"):
     con = sqlite3.connect(DB_PATH)
